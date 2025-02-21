@@ -1,0 +1,117 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Hmanguyi/Ren2/blob/main/Ren2.ipy\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "hG8tYtlCwvNi",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "outputId": "c640bf44-df31-4328-817b-769a1e197478"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Error: The image /path/to/your/image.jpg does not exist.\n"
+          ]
+        }
+      ],
+      "source": [
+        "import base64\n",
+        "import os\n",
+        "from mistralai import Mistral\n",
+        "\n",
+        "def encode_image(image_path):\n",
+        "    \"\"\"Encode the image to base64.\"\"\"\n",
+        "    try:\n",
+        "        with open(image_path, \"rb\") as image_file:\n",
+        "            return base64.b64encode(image_file.read()).decode('utf-8')\n",
+        "    except FileNotFoundError:\n",
+        "        print(f\"Error: The file {image_path} was not found.\")\n",
+        "        return None\n",
+        "    except Exception as e:\n",
+        "        print(f\"Error: {e}\")\n",
+        "        return None\n",
+        "\n",
+        "# Get the image path from environment or configuration\n",
+        "image_path = \"/path/to/your/image.jpg\"  # Make sure this path is correct\n",
+        "\n",
+        "# Check if the file exists\n",
+        "if not os.path.exists(image_path):\n",
+        "    print(f\"Error: The image {image_path} does not exist.\")\n",
+        "else:\n",
+        "    # Encode the image to base64\n",
+        "    base64_image = encode_image(image_path)\n",
+        "\n",
+        "    if base64_image:\n",
+        "        api_key = os.getenv(\"MISTRAL_API_KEY\")\n",
+        "        if not api_key:\n",
+        "            print(\"Error: Missing API key.\")\n",
+        "        else:\n",
+        "            model = \"pixtral-12b-2409\"\n",
+        "            client = Mistral(api_key=api_key)\n",
+        "\n",
+        "            messages = [\n",
+        "                {\n",
+        "                    \"role\": \"user\",\n",
+        "                    \"content\": [\n",
+        "                        {\n",
+        "                            \"type\": \"text\",\n",
+        "                            \"text\": \"is it food or recyclable plastic or none of the above?\"\n",
+        "                        },\n",
+        "                        {\n",
+        "                            \"type\": \"image_url\",\n",
+        "                            \"image_url\": f\"data:image/jpeg;base64,{base64_image}\"\n",
+        "                        }\n",
+        "                    ]\n",
+        "                }\n",
+        "            ]\n",
+        "\n",
+        "            try:\n",
+        "                # Send the request to Mistral API\n",
+        "                chat_response = client.chat.complete(\n",
+        "                    model=model,\n",
+        "                    messages=messages\n",
+        "                )\n",
+        "\n",
+        "                # Ensure the response is valid before accessing\n",
+        "                if chat_response and chat_response.choices:\n",
+        "                    print(chat_response.choices[0].message.content)\n",
+        "                else:\n",
+        "                    print(\"Error: No valid response from the API.\")\n",
+        "\n",
+        "            except Exception as e:\n",
+        "                print(f\"Error during chat completion: {e}\")\n"
+      ]
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNhv6sgOUGOESnaETWUWM/A",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
