@@ -1,4 +1,4 @@
-Flask==2.2.3
-werkzeug==2.2.3
-mistralai==0.1.0
+Flask
+werkzeug
+mistralai
 
