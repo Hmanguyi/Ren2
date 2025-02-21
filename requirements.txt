@@ -1,5 +1,4 @@
-mistralai
-numpy
-pillow
-flask  # If you are using Flask for the backend
-gunicorn  # Required for Render
+Flask==2.2.3
+werkzeug==2.2.3
+mistralai==0.1.0
+
