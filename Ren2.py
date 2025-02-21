@@ -102,4 +102,6 @@ if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     
-    app.run(debug=True)
+    # Get the port from the environment variable (for deployment on Render)
+    port = int(os.getenv("PORT", 5000))  # Default to 5000 if the PORT variable isn't set
+    app.run(debug=True, host='0.0.0.0', port=port)
