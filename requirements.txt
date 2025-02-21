@@ -1,0 +1,5 @@
+mistralai
+numpy
+pillow
+flask  # If you are using Flask for the backend
+gunicorn  # Required for Render
