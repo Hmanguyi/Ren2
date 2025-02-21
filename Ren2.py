@@ -14,8 +14,6 @@ def encode_image(image_path):
         print(f"Error: {e}")
         return None
 
-# Get the image path from environment or configuration
-image_path = "/path/to/your/image.jpg"  # Make sure this path is correct
 
 # Check if the file exists
 if not os.path.exists(image_path):
