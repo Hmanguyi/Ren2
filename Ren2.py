@@ -1,6 +1,21 @@
 import base64
 import os
+from flask import Flask, request, jsonify
+from werkzeug.utils import secure_filename
 from mistralai import Mistral
+
+app = Flask(__name__)
+
+# Set a folder where images will be stored
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
+# Set the upload folder for Flask
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Check if the file is an allowed type
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def encode_image(image_path):
     """Encode the image to base64."""
@@ -16,12 +31,10 @@ def encode_image(image_path):
 
 def process_image(image_path):
     """Process the image and send it to the Mistral API."""
-    # Check if the file exists
     if not os.path.exists(image_path):
         print(f"Error: The image {image_path} does not exist.")
         return
 
-    # Encode the image to base64
     base64_image = encode_image(image_path)
 
     if base64_image:
@@ -50,27 +63,43 @@ def process_image(image_path):
         ]
 
         try:
-            # Send the request to Mistral API
             chat_response = client.chat.complete(
                 model=model,
                 messages=messages
             )
 
-            # Ensure the response is valid before accessing
             if chat_response and chat_response.choices:
                 print(chat_response.choices[0].message.content)
             else:
                 print("Error: No valid response from the API.")
-
         except Exception as e:
             print(f"Error during chat completion: {e}")
 
-# Main function that handles the image path and API call
-if __name__ == "__main__":
-    # Get the image path from environment variable
-    image_path = os.getenv("IMAGE_PATH")  # Make sure to set this environment variable
-
-    if not image_path:
-        print("Error: IMAGE_PATH environment variable is missing.")
-    else:
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+    
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(image_path)
+        
+        # Once image is saved, process it
         process_image(image_path)
+        
+        return jsonify({"message": "File uploaded and processed successfully"}), 200
+    
+    return jsonify({"error": "Invalid file format"}), 400
+
+if __name__ == '__main__':
+    # Create uploads folder if it doesn't exist
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+    
+    app.run(debug=True)
