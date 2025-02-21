@@ -14,11 +14,13 @@ def encode_image(image_path):
         print(f"Error: {e}")
         return None
 
+def process_image(image_path):
+    """Process the image and send it to the Mistral API."""
+    # Check if the file exists
+    if not os.path.exists(image_path):
+        print(f"Error: The image {image_path} does not exist.")
+        return
 
-# Check if the file exists
-if not os.path.exists(image_path):
-    print(f"Error: The image {image_path} does not exist.")
-else:
     # Encode the image to base64
     base64_image = encode_image(image_path)
 
@@ -26,38 +28,49 @@ else:
         api_key = os.getenv("MISTRAL_API_KEY")
         if not api_key:
             print("Error: Missing API key.")
-        else:
-            model = "pixtral-12b-2409"
-            client = Mistral(api_key=api_key)
+            return
 
-            messages = [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "is it food or recyclable plastic or none of the above?"
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": f"data:image/jpeg;base64,{base64_image}"
-                        }
-                    ]
-                }
-            ]
+        model = "pixtral-12b-2409"
+        client = Mistral(api_key=api_key)
 
-            try:
-                # Send the request to Mistral API
-                chat_response = client.chat.complete(
-                    model=model,
-                    messages=messages
-                )
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Is it food or recyclable plastic or none of the above?"
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": f"data:image/jpeg;base64,{base64_image}"
+                    }
+                ]
+            }
+        ]
 
-                # Ensure the response is valid before accessing
-                if chat_response and chat_response.choices:
-                    print(chat_response.choices[0].message.content)
-                else:
-                    print("Error: No valid response from the API.")
+        try:
+            # Send the request to Mistral API
+            chat_response = client.chat.complete(
+                model=model,
+                messages=messages
+            )
 
-            except Exception as e:
-                print(f"Error during chat completion: {e}")
+            # Ensure the response is valid before accessing
+            if chat_response and chat_response.choices:
+                print(chat_response.choices[0].message.content)
+            else:
+                print("Error: No valid response from the API.")
+
+        except Exception as e:
+            print(f"Error during chat completion: {e}")
+
+# Main function that handles the image path and API call
+if __name__ == "__main__":
+    # Get the image path from environment variable
+    image_path = os.getenv("IMAGE_PATH")  # Make sure to set this environment variable
+
+    if not image_path:
+        print("Error: IMAGE_PATH environment variable is missing.")
+    else:
+        process_image(image_path)
