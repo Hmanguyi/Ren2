@@ -1,12 +1,11 @@
 import base64
 import requests
-import os
 from flask import Flask, request, jsonify
 from mistralai import Mistral
 
 app = Flask(__name__)
 
-# Set your API key
+# Set your API key and model
 API_KEY = "6pdlTRLqX2GhuEjgrtNJqwAhBWm8Yy6M"
 MODEL = "pixtral-12b-2409"
 client = Mistral(api_key=API_KEY)
@@ -46,8 +45,15 @@ def classify_image():
     try:
         chat_response = client.chat.complete(model=MODEL, messages=messages)
         response_text = chat_response.choices[0].message.content
-        return jsonify({"response": response_text})
+        response = {"response": response_text}
+        
+        # Log the response for debugging
+        print("Raw Response:", response)
+        
+        return jsonify(response)
     except Exception as e:
+        # Log the error for debugging
+        print(f"Error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
