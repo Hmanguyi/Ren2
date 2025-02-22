@@ -10,14 +10,14 @@ API_KEY = "6pdlTRLqX2GhuEjgrtNJqwAhBWm8Yy6M"
 MODEL = "pixtral-12b-2409"
 client = Mistral(api_key=API_KEY)
 
-def encode_image_from_url(image_url):
-    """Download and encode the image to base64."""
+def process_base64_image(base64_image):
+    """Decodes the Base64 image and returns the image bytes."""
     try:
-        response = requests.get(image_url)
-        response.raise_for_status()  # Raise an error for bad responses
-        return base64.b64encode(response.content).decode('utf-8')
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}")
+        # Remove the 'data:image/jpeg;base64,' part from the string
+        base64_image = base64_image.split(",")[1]
+        return base64.b64decode(base64_image)
+    except Exception as e:
+        print(f"Error decoding image: {e}")
         return None
 
 @app.route('/classify', methods=['POST'])
@@ -28,25 +28,24 @@ def classify_image():
     if not image_url:
         return jsonify({"error": "No image URL provided"}), 400
 
-    base64_image = encode_image_from_url(image_url)
-    if not base64_image:
+    # Process the image (decode from Base64)
+    image_data = process_base64_image(image_url)
+    if not image_data:
         return jsonify({"error": "Failed to process image"}), 500
 
-    # Debugging: Log the Base64 image size and a sample of the data
-    print(f"Base64 Image Size: {len(base64_image)}")  # Log the size of the Base64 string
-    print(f"Base64 Image Sample: {base64_image[:100]}...")  # Log a sample (first 100 chars)
-
+    # Create a mock message with the decoded image
     messages = [
         {
             "role": "user",
             "content": [
                 {"type": "text", "text": "is it food or recyclable plastic or none of the above?"},
-                {"type": "image_url", "image_url": f"data:image/jpeg;base64,{base64_image}"}
+                {"type": "image", "image": image_data}
             ]
         }
     ]
 
     try:
+        # Send the image data to the model for classification
         chat_response = client.chat.complete(model=MODEL, messages=messages)
         response_text = chat_response.choices[0].message.content
         response = {"response": response_text}
