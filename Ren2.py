@@ -32,6 +32,10 @@ def classify_image():
     if not base64_image:
         return jsonify({"error": "Failed to process image"}), 500
 
+    # Debugging: Log the Base64 image size and a sample of the data
+    print(f"Base64 Image Size: {len(base64_image)}")  # Log the size of the Base64 string
+    print(f"Base64 Image Sample: {base64_image[:100]}...")  # Log a sample (first 100 chars)
+
     messages = [
         {
             "role": "user",
