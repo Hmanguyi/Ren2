@@ -11,13 +11,14 @@ MODEL = "pixtral-12b-2409"
 client = Mistral(api_key=API_KEY)
 
 def process_base64_image(base64_image):
-    """Decodes the Base64 image and returns the image bytes."""
+    """Ensure the image string has only one 'data:image/jpeg;base64,' prefix."""
     try:
-        # Remove the 'data:image/jpeg;base64,' part from the string
-        base64_image = base64_image.split(",")[1]
-        return base64.b64decode(base64_image)
+        # Only add the prefix if it's not already there
+        if not base64_image.startswith('data:image/jpeg;base64,'):
+            base64_image = f"data:image/jpeg;base64,{base64_image}"
+        return base64_image
     except Exception as e:
-        print(f"Error decoding image: {e}")
+        print(f"Error encoding image: {e}")
         return None
 
 @app.route('/classify', methods=['POST'])
@@ -28,18 +29,17 @@ def classify_image():
     if not image_url:
         return jsonify({"error": "No image URL provided"}), 400
 
-    # Process the image (decode from Base64)
-    image_data = process_base64_image(image_url)
-    if not image_data:
+    # Process the image URL and ensure it's correctly formatted
+    base64_image = process_base64_image(image_url)
+    if not base64_image:
         return jsonify({"error": "Failed to process image"}), 500
 
-    # Create a mock message with the decoded image
     messages = [
         {
             "role": "user",
             "content": [
                 {"type": "text", "text": "is it food or recyclable plastic or none of the above?"},
-                {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_url}"}
+                {"type": "image_url", "image_url": base64_image}
             ]
         }
     ]
