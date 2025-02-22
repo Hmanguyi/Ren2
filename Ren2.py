@@ -39,7 +39,7 @@ def classify_image():
             "role": "user",
             "content": [
                 {"type": "text", "text": "is it food or recyclable plastic or none of the above?"},
-                {"type": "image", "image": image_data}
+                {"type": "image_url", "image_url": f"data:image/jpeg;base64,{image_url}"}
             ]
         }
     ]
